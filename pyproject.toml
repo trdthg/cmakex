@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cmakex"
+version = "0.1.0"
+description = "A lightweight GitHub-first FetchContent helper for CMake projects."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "cmakex contributors" }
+]
+license = { text = "MIT" }
+
+[project.scripts]
+cmakex = "cmakex.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
