@@ -316,6 +316,76 @@ cmakex run hello -- arg1 arg2
 
 If no target is passed, `cmakex` uses the name from `project(...)`.
 
+## Examples
+
+This section is intentionally small and can grow as more repositories are tested.
+
+### CLI11
+
+CLI11 is a C++ command-line parser. It works well with direct FetchContent embedding.
+
+```bash
+cmakex install CLIUtils/CLI11==v2.6.2
+```
+
+Expected target:
+
+```cmake
+target_link_libraries(<your-app> PRIVATE CLI11)
+```
+
+### raylib
+
+raylib is a C game programming library. It can be installed from GitHub:
+
+```bash
+cmakex install raysan5/raylib==6.0
+```
+
+### OpenCV
+
+OpenCV is a large CMake project. It may not behave like a small library when embedded directly with `FetchContent_MakeAvailable(opencv)`.
+
+Basic install:
+
+```bash
+cmakex install opencv/opencv==4.10.0
+```
+
+If OpenCV fails around IPP internals, for example:
+
+```text
+hal/ipp/src/mean_ipp.cpp
+fatal error: opencv2/core/base.hpp: No such file or directory
+```
+
+the header may exist, but the OpenCV internal `ipphal` target did not receive the expected include path in this embedded build. A practical workaround is to disable IPP:
+
+```bash
+rm -rf build
+cmakex uninstall opencv
+cmakex install opencv/opencv==4.10.0 --set WITH_IPP=OFF
+```
+
+For faster and smaller builds, restrict modules:
+
+```bash
+rm -rf build
+cmakex uninstall opencv
+cmakex install opencv/opencv==4.10.0 \
+  --set WITH_IPP=OFF \
+  --set BUILD_LIST=core,imgproc,imgcodecs \
+  --set BUILD_TESTS=OFF \
+  --set BUILD_PERF_TESTS=OFF \
+  --set BUILD_EXAMPLES=OFF
+```
+
+Common module targets:
+
+```cmake
+target_link_libraries(<your-app> PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
+```
+
 ## CMake Output
 
 For:
@@ -355,46 +425,6 @@ FetchContent_Declare(
 set(WITH_IPP OFF CACHE BOOL "cmakex option for opencv" FORCE)
 FetchContent_MakeAvailable(opencv)
 ```
-
-## OpenCV Notes
-
-OpenCV is a large CMake project and may not behave like a small header/library dependency when embedded directly with `FetchContent_MakeAvailable(opencv)`.
-
-If OpenCV fails around IPP internals, for example:
-
-```text
-hal/ipp/src/mean_ipp.cpp
-fatal error: opencv2/core/base.hpp: No such file or directory
-```
-
-the header may exist, but the OpenCV internal `ipphal` target did not receive the expected include path in this embedded build. A practical workaround is to disable IPP:
-
-```bash
-rm -rf build
-cmakex uninstall opencv
-cmakex install opencv/opencv==4.10.0 --set WITH_IPP=OFF
-```
-
-For faster and smaller builds, restrict modules:
-
-```bash
-rm -rf build
-cmakex uninstall opencv
-cmakex install opencv/opencv==4.10.0 \
-  --set WITH_IPP=OFF \
-  --set BUILD_LIST=core,imgproc,imgcodecs \
-  --set BUILD_TESTS=OFF \
-  --set BUILD_PERF_TESTS=OFF \
-  --set BUILD_EXAMPLES=OFF
-```
-
-OpenCV target names are usually module-specific:
-
-```cmake
-target_link_libraries(hello PRIVATE opencv_core opencv_imgproc opencv_imgcodecs)
-```
-
-For production OpenCV usage, an installed OpenCV plus `find_package(OpenCV CONFIG REQUIRED)` may be more reliable than direct FetchContent embedding.
 
 ## Current Boundaries
 

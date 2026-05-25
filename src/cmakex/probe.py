@@ -49,8 +49,8 @@ def read_file_api_targets(build_path: Path, dependency_name: str) -> list[str]:
     codemodel = json.loads((reply_path / codemodel_ref).read_text(encoding="utf-8"))
     target_names: set[str] = set()
     fallback_names: set[str] = set()
-    source_marker = f"_deps/{dependency_name}-src"
-    build_marker = f"_deps/{dependency_name}-build"
+    source_marker = f"_deps/{dependency_name.lower()}-src"
+    build_marker = f"_deps/{dependency_name.lower()}-build"
 
     for configuration in codemodel.get("configurations", []):
         directories = configuration.get("directories", [])
@@ -65,8 +65,8 @@ def read_file_api_targets(build_path: Path, dependency_name: str) -> list[str]:
                 directory = directories[directory_index]
             source_dir = directory.get("source", target.get("sourceDirectory", ""))
             build_dir = directory.get("build", target.get("buildDirectory", ""))
-            normalized_source = source_dir.replace("\\", "/")
-            normalized_build = build_dir.replace("\\", "/")
+            normalized_source = source_dir.replace("\\", "/").lower()
+            normalized_build = build_dir.replace("\\", "/").lower()
             if source_marker in normalized_source or build_marker in normalized_build:
                 target_names.add(name)
 

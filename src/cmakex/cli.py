@@ -230,10 +230,14 @@ def cmd_run(args) -> int:
     program_args = args.program_args
     if program_args and program_args[0] == "--":
         program_args = program_args[1:]
+    target = args.target
+    if target and target.startswith("-"):
+        program_args = [target, *program_args]
+        target = None
     return run_project(
         root,
         Path(args.build_dir),
-        target=args.target,
+        target=target,
         config=args.config,
         program_args=program_args,
     )
@@ -252,7 +256,7 @@ def print_targets(root: Path, targets: list[str]) -> None:
 
 def print_link_template(root: Path, targets: list[str]) -> None:
     project_target = infer_link_target(root)
-    upstream_target = targets[0] if targets else "<upstream-target>"
+    upstream_target = infer_upstream_link_target(targets)
     print("Next step: add this to your CMakeLists.txt and replace placeholders as needed:")
     print()
     print(f"  target_link_libraries({project_target} PRIVATE {upstream_target})")
@@ -274,7 +278,13 @@ def infer_link_target(root: Path) -> str:
 def can_print_append_command(project_target: str, upstream_target: str) -> bool:
     if sys.platform not in {"linux", "linux2", "darwin"}:
         return False
-    return "<" not in project_target and "<" not in upstream_target
+    return "<" not in project_target
+
+
+def infer_upstream_link_target(targets: list[str]) -> str:
+    if len(targets) == 1:
+        return targets[0]
+    return "<target>"
 
 
 def print_table(headers: tuple[str, ...], rows: list[tuple[str, ...]]) -> None:
